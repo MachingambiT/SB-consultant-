@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ShieldCheck, Clock, Award, HeadphonesIcon, MapPin, Phone, MessageCircle, Menu, X } from 'lucide-react';
 import { services } from './types';
@@ -7,9 +7,26 @@ import { VoiceAssistant } from './components/VoiceAssistant';
 import { TTSPlayer } from './components/TTSPlayer';
 import { Toaster } from './components/ui/sonner';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './components/ui/card';
+import { AdminDashboard } from './components/AdminDashboard';
 
 export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(window.location.hash === '#admin');
+
+  useEffect(() => {
+    const handleHashChange = () => setIsAdmin(window.location.hash === '#admin');
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  if (isAdmin) {
+    return (
+      <div className="min-h-screen bg-background font-sans selection:bg-primary/30 text-foreground">
+        <Toaster position="top-center" />
+        <AdminDashboard />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background font-sans selection:bg-primary/30 relative">
@@ -251,6 +268,7 @@ export default function App() {
           </div>
         </div>
         <div className="flex items-center gap-6">
+          <a href="#admin" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Admin Login</a>
           <div className="flex flex-col items-end">
             <span className="text-xs text-muted-foreground">SB Elite Portal</span>
             <span className="text-[10px] text-green-500 uppercase font-bold tracking-tighter">Backend Optimized</span>

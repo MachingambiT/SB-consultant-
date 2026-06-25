@@ -9,8 +9,14 @@ import { WebSocketServer } from 'ws';
 // Initialize Resend
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
-// Initialize Gemini for TTS
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let ai: GoogleGenAI | null = null;
+function getAi() {
+  if (!ai) {
+    if (!process.env.GEMINI_API_KEY) throw new Error('GEMINI_API_KEY not set');
+    ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  }
+  return ai;
+}
 
 const app = express();
 app.use(express.json());
@@ -50,7 +56,8 @@ app.post('/api/tts', async (req, res) => {
     const { text } = req.body;
     if (!text) return res.status(400).json({ error: 'Text required' });
     
-    const interaction = await ai.models.generateContent({
+    const aiClient = getAi();
+    const interaction = await aiClient.models.generateContent({
       model: 'gemini-3.1-flash-tts-preview',
       contents: [{ parts: [{ text }] }],
       config: {
@@ -98,7 +105,8 @@ wss.on('connection', async (ws) => {
   console.log('Client connected to Live API Proxy');
   
   try {
-    const session = await ai.live.connect({
+    const aiClient = getAi();
+    const session = await aiClient.live.connect({
       model: "gemini-3.1-flash-live-preview",
       callbacks: {
         onmessage: (message: LiveServerMessage) => {
